@@ -17,6 +17,7 @@ repositories {
 val ktorVersion = "1.6.5"
 
 dependencies {
+    implementation("com.google.maps:google-maps-services:1.0.1")
     implementation("ch.qos.logback:logback-classic:1.3.0-alpha10")
     implementation("ch.qos.logback:logback-core:1.3.0-alpha10")
 
@@ -45,8 +46,6 @@ dependencies {
     implementation("io.github.microutils:kotlin-logging:2.0.11")
     implementation("org.slf4j:slf4j-api:2.0.0-alpha4")
 }
-
-
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
