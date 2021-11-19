@@ -11,7 +11,9 @@ repositories {
     mavenCentral()
 }
 
-
+dependencies {
+    implementation("com.google.maps:google-maps-services:1.0.1")
+}
 
 tasks.withType<KotlinCompile>() {
     kotlinOptions.jvmTarget = "1.8"
