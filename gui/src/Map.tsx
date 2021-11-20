@@ -1,7 +1,6 @@
 import {Card} from "@mui/material";
 import {useEffect} from "react";
-import {getVehicles} from "./api";
-import CarOverlay from "./CarOverlay";
+import {getBookings, getDirections, getVehicles} from "./api";
 
 const Map = () => {
     // setup Google Maps
@@ -11,8 +10,8 @@ const Map = () => {
             zoom: 11
         });
 
+        // display vehicles
         getVehicles().then(vehicles => {
-            console.log(vehicles)
             for (let v of vehicles) {
                 new google.maps.Marker({
                     position: new google.maps.LatLng(v.lat, v.lng),
@@ -21,6 +20,27 @@ const Map = () => {
                 })
             }
         });
+
+        getBookings().then(bookings => {
+            bookings.forEach(b =>
+                getDirections({
+                    startLat: b.pickupLat,
+                    startLng: b.pickupLng,
+                    dstLat: b.destinationLat,
+                    dstLng: b.destinationLng
+                }).then(result => {
+                    console.log(result)
+
+                    new google.maps.Polyline({
+                        // this exists and we know it
+                        // @ts-ignore
+                        path: google.maps.geometry.encoding.decodePath(result.overview_polyline["points"]),
+                        map: map
+                    })
+
+                })
+            )
+        })
     })
 
     return (

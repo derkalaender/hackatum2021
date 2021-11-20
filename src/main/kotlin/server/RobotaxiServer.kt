@@ -8,8 +8,11 @@ import io.ktor.features.CORS
 import io.ktor.features.ContentNegotiation
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.routing.get
+import io.ktor.routing.post
 import io.ktor.routing.routing
 import io.ktor.serialization.json
 import io.ktor.server.engine.ApplicationEngine
@@ -18,6 +21,7 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import sixtapi.SixtAPI
+import util.DirectionsOptions
 
 object RobotaxiGui {
     private lateinit var server: ApplicationEngine
@@ -60,16 +64,20 @@ private fun Application.module() {
             call.respond(SixtAPI.getVehicles())
         }
 
-        get("/directions") {
+        post("/directions") {
             // TODO proper error handling
-            val lngSrc = call.request.queryParameters["lngSrc"]!!.toDouble()
-            val latSrc = call.request.queryParameters["latSrc"]!!.toDouble()
-            val lngDst = call.request.queryParameters["lngDst"]!!.toDouble()
-            val latDst = call.request.queryParameters["latDst"]!!.toDouble()
+            val (lngSrc, latSrc, lngDst, latDst) = call.receive<DirectionsOptions>()
 
-            val route = GoogleAPI.getDirections(lngSrc, latSrc, lngDst, latDst)!!.routes.minByOrNull { r ->
+            val directions = GoogleAPI.getDirections(lngSrc, latSrc, lngDst, latDst)
+
+            val route = directions?.routes?.minByOrNull { r ->
                 r.legs.sumOf { it.duration.value }
-            }!!
+            } ?: run {
+                call.respond(
+                    HttpStatusCode.BadRequest
+                )
+                return@post
+            }
 
             call.respond(route)
         }
