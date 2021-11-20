@@ -52,18 +52,25 @@ class RouteSearchResult(
 
     val standardDistance: Int = standardDirection?.let { RouteFinder.calculateDistance(it) } ?: -1
     val mergedDistance: Int = mergedDirection?.let {
-        val shortest = RouteFinder.getShortestRoute(it)
-        RouteFinder.getDistanceIn(shortest.legs.first().start_location, shortest.legs.last().end_location, it)
+        if(standardDirection != null) {
+            val shortest = RouteFinder.getShortestRoute(standardDirection)
+            RouteFinder.getDistanceIn(shortest.legs.first().start_location, shortest.legs.last().end_location, it)
+        } else null
     } ?: -1
     val standardCO2 = calcCO2(calcKWH(standardDistance))
     val mergedCO2 = calcCO2(calcKWH(mergedDistance))
     val standardTime = standardDirection?.let { RouteFinder.calculateTime(it) } ?: -1
     val mergedTime = mergedDirection?.let {
-        val shortest = RouteFinder.getShortestRoute(it)
-        RouteFinder.getTimeIn(shortest.legs.first().start_location, shortest.legs.last().end_location, it)
+        if (standardDirection != null){
+            val shortest = RouteFinder.getShortestRoute(standardDirection)
+            RouteFinder.getTimeIn(shortest.legs.first().start_location, shortest.legs.last().end_location, it)
+        } else null
     } ?: -1
     val standardRoute: DirectionsRoute? = standardDirection?.let { RouteFinder.getShortestRoute(it) }
-    val mergedRoute: DirectionsRoute? = mergedDirection?.let { RouteFinder.getShortestRoute(it) }
+    val mergedRoute: DirectionsRoute? = mergedDirection?.let {
+        if(mergedDistance > standardDistance) null else
+        RouteFinder.getShortestRoute(it)
+    }
 }
 
 object RouteFinder {
@@ -99,6 +106,12 @@ object RouteFinder {
         val bookings = SixtAPI.getBookings()
         //TODO check error
         val shortestPickupDirection = bookings.map { booking ->
+//            val firstDestMatrix = GoogleAPI.getMatrix(
+//                origins = listOf(Pair(booking.pickupLat.toString(), booking.pickupLng.toString())),
+//                destinations =
+//            )
+
+            
             val bookingSrcMatrix = GoogleAPI.getMatrix(
                 origins = listOf(Pair(booking.pickupLat.toString(), booking.pickupLng.toString())),
                 destinations = listOf(
