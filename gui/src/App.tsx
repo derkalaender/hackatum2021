@@ -10,6 +10,7 @@ const App = () => {
 
     // wait for google maps to load and only then import the Map Component
     useEffect(() => {
+        console.log("hey")
         const loader = new Loader({
             apiKey: "AIzaSyBXqG0fwm1zQ_XlPujzFV3OXbGkggCUBnA",
             version: "weekly",
