@@ -8,6 +8,7 @@ const Map = React.lazy(() => import("./Map"))
 const App = () => {
     const [mapLoaded, setMapLoaded] = useState(false);
 
+    // wait for google maps to load and only then import the Map Component
     useEffect(() => {
         const loader = new Loader({
             apiKey: "AIzaSyBXqG0fwm1zQ_XlPujzFV3OXbGkggCUBnA",
@@ -16,7 +17,7 @@ const App = () => {
         loader.load().then(() => {
             setMapLoaded(true)
         })
-    }, [mapLoaded])
+    }, [])
 
     return (
         <Suspense fallback={<div>Loading...</div>}>
