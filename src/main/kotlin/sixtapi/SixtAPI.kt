@@ -7,9 +7,7 @@ import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
 import kotlinx.serialization.decodeFromString
-import sixtapi.json.Booking
-import sixtapi.json.Person
-import sixtapi.json.Vehicle
+import sixtapi.json.*
 import util.Json
 import util.Network
 
@@ -79,12 +77,14 @@ object SixtAPI {
 
     suspend fun getVehicles(): List<Vehicle> {
         val string = get("/vehicles")
-        return runCatching<List<Vehicle>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+        return runCatching<List<VehicleJson>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+            .map { Vehicle(it.charge, it.lat, it.lng, VehicleStatus.stringToStatus(it.status), it.vehicleID) }
     }
 
     suspend fun getVehicle(id: String): Vehicle? {
         val string = get("/vehicle/$id")
-        return runCatching<Vehicle> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
+        return runCatching<VehicleJson> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
+            ?.let { Vehicle(it.charge, it.lat, it.lng, VehicleStatus.stringToStatus(it.status), it.vehicleID) }
     }
 
     suspend fun getBookings(): List<Booking> {
