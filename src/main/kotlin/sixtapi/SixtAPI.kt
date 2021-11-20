@@ -10,6 +10,7 @@ import kotlinx.serialization.decodeFromString
 import sixtapi.json.*
 import util.Json
 import util.Network
+import java.util.*
 
 object SixtAPI {
     const val endpoint = "https://us-central1-sixt-hackatum-2021-black.cloudfunctions.net/api"
@@ -89,7 +90,7 @@ object SixtAPI {
 
     suspend fun getBookings(): List<Booking> {
         val string = get("/bookings")
-        return runCatching<List<Booking>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+        return runCatching<List<Booking>> { Json.jsonTranscoder.decodeFromString(string) }.onFailure { println(it) }.getOrElse { return listOf() }
     }
 
     suspend fun getBooking(id: String): Booking? {
@@ -98,8 +99,7 @@ object SixtAPI {
     }
 
     suspend fun postBooking(startLat: Double, startLgn: Double, dstLat: Double, dstLng: Double) {
-        // not needed
-        // post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn))
+        post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn, UUID.randomUUID().toString(), null, BookingStatus.CREATED))
     }
 
     suspend fun deleteBooking(id: String) {

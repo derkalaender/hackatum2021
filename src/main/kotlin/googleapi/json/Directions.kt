@@ -49,6 +49,7 @@ data class DirectionsRoute(
     val legs: List<DirectionsLeg> = listOf(),
     val overview_polyline: DirectionsPolyline = DirectionsPolyline(),
     val summary: String = "",
+    val waypoint_order : List<Int> = listOf()
 )
 
 @Serializable

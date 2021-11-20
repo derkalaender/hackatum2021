@@ -45,7 +45,7 @@ object GoogleAPI {
                 "$endpoint/directions/json?" +
                     "origin=${URLEncoder.encode("$startLat,$startLng", Charsets.UTF_8)}" +
                     "&destination=${URLEncoder.encode("$dstLat,$dstLng", Charsets.UTF_8)}" +
-                        if (waypoints != null) "&waypoints=${URLEncoder.encode(waypoints.joinToString(separator = "|") { "${it.first},${it.second}" }, Charsets.UTF_8)}" else "" +
+                        (if (waypoints != null) "&waypoints=${URLEncoder.encode(waypoints.joinToString(separator = "|") { "${it.first},${it.second}" }, Charsets.UTF_8)}" else "") +
                     "&key=$key"
             )
         }.onFailure { println(it) }.getOrElse { return null }
