@@ -14,8 +14,11 @@ const Map = () => {
         getVehicles().then(vehicles => {
             console.log(vehicles)
             for (let v of vehicles) {
-                let overlay = new CarOverlay(new google.maps.LatLng(v.lat, v.lng));
-                overlay.setMap(map)
+                new google.maps.Marker({
+                    position: new google.maps.LatLng(v.lat, v.lng),
+                    icon: "./taxi.png",
+                    map: map
+                })
             }
         });
     })

@@ -1,3 +1,4 @@
+// yoinked from the overlay example https://developers.google.com/maps/documentation/javascript/customoverlays
 export default class CarOverlay extends google.maps.OverlayView {
     private latLng: google.maps.LatLng
     private div?: HTMLElement;
