@@ -35,7 +35,7 @@ object GoogleAPI {
             ?.let { Geocode(it.results, GeocodeStatus.stringToStatus(it.status)) }
     }
 
-    suspend fun getDirections(startLat: Double, startLng: Double, dstLat: Double, dstLng: Double): Directions? {
+    suspend fun getDirections(startLat: Double, startLng: Double, dstLat: Double, dstLng: Double, waypoints: List<Pair<Double, Double>>? = null): Directions? {
         val directionsOptions = DirectionsOptions(startLat, startLng, dstLat, dstLng)
         directionsCache[directionsOptions]?.let { return it }
 
@@ -46,6 +46,7 @@ object GoogleAPI {
                 "$endpoint/directions/json?" +
                     "origin=${URLEncoder.encode("$startLat,$startLng", Charsets.UTF_8)}" +
                     "&destination=${URLEncoder.encode("$dstLat,$dstLng", Charsets.UTF_8)}" +
+                        if (waypoints != null) "&waypoints=${URLEncoder.encode(waypoints.joinToString(separator = "|") { "${it.first},${it.second}" }, Charsets.UTF_8)}" else "" +
                     "&key=$key"
             )
         }.onFailure { println(it) }.getOrElse { return null }
