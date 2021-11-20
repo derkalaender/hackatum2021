@@ -1,4 +1,4 @@
-import {Booking, Vehicle} from "./types"
+import {Booking, Query, RouteGeometry, RouteResult, Vehicle} from "./types"
 
 const baseUrl = "http://localhost:8080"
 
@@ -17,41 +17,37 @@ export const getVehicles = async (): Promise<Vehicle[]> => {
 export const getBookings = async (): Promise<Booking[]> => {
     return await fetch(baseUrl + "/bookings")
         .then(res => res.json())
-        .then(data => {
-            return data as Booking[]
-        })
+        .then(data => data as Booking[])
         .catch(() => {
-            console.log("error fetching bookings")
+            console.error("error fetching bookings")
             return []
         })
 }
 
-export const getDirections = async (directionsOptions: {
-    startLat: number,
-    startLng: number,
-    dstLat: number,
-    dstLng: number
-}): Promise<google.maps.DirectionsRoute> => {
+export const getDirections = async (query: Query): Promise<RouteGeometry> => {
     return await fetch(baseUrl + "/directions", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
-        body: JSON.stringify(directionsOptions)
+        body: JSON.stringify(query)
     })
         .then(res => res.json())
-        .then(data => {
-            return data as google.maps.DirectionsRoute
-        })
-        // .then(route => {
-        //     // hack tochange the bounds type to work for javascript
-        //     let currentBounds = route.bounds as unknown as {
-        //         northeast: google.maps.LatLng,
-        //         southwest: google.maps.LatLng
-        //     }
-        //     route.bounds = new google.maps.LatLngBounds(currentBounds.southwest, currentBounds.northeast)
-        //     return route
-        // })
+        .then(data => data as RouteGeometry)
         .catch(() => {
-            console.log("error fetching bookings")
+            console.error("error fetching bookings")
+            return Promise.reject()
+        })
+}
+
+export const searchRoutes = async (query: Query): Promise<RouteResult> => {
+    return await fetch(baseUrl + "/route", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify(query)
+    })
+        .then(res =>res.json())
+        .then(data => data as RouteResult)
+        .catch(() => {
+            console.error("error searching route")
             return Promise.reject()
         })
 }
