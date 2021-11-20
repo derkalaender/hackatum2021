@@ -1,6 +1,9 @@
 
 import gui.RobotaxiGui
+import kotlinx.coroutines.runBlocking
+import sixtapi.SixtAPI
 
-fun main() {
-    RobotaxiGui.start()
+suspend fun main () {
+    //RobotaxiGui.start()
+    SixtAPI.getVehicles()
 }
