@@ -13,6 +13,7 @@ const App = () => {
         const loader = new Loader({
             apiKey: "AIzaSyBXqG0fwm1zQ_XlPujzFV3OXbGkggCUBnA",
             version: "weekly",
+            libraries: ["geometry"]
         });
         loader.load().then(() => {
             setMapLoaded(true)

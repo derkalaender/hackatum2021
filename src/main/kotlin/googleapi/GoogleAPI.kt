@@ -5,6 +5,7 @@ import io.ktor.client.call.receive
 import io.ktor.client.request.get
 import io.ktor.client.statement.HttpResponse
 import kotlinx.serialization.decodeFromString
+import util.DirectionsOptions
 import util.Json
 import util.Network
 import java.net.URLEncoder
@@ -49,9 +50,8 @@ object GoogleAPI {
             )
         }.onFailure { println(it) }.getOrElse { return null }
         val string = result.receive<String>()
-        return kotlin.runCatching<DirectionsJson> { Json.jsonTranscoder.decodeFromString(string) }
+        return kotlin.runCatching<Directions> { Json.jsonTranscoder.decodeFromString(string) }
             .onFailure { println(it) }.getOrNull()
-            ?.let { Directions(it.geocoded_waypoints, it.routes, DirectionsStatus.stringToStatus(it.status)) }
             ?.also { directionsCache[directionsOptions] = it }
     }
 
@@ -70,10 +70,4 @@ object GoogleAPI {
         return kotlin.runCatching<MatrixJson> { Json.jsonTranscoder.decodeFromString(string) }.onFailure { println(it) }.getOrNull()
             ?.let { Matrix(it.destination_addresses, it.origin_addresses, it.rows, MatrixStatus.stringToStatus(it.status)) }
     }
-    private data class DirectionsOptions(
-        val startLat: Double,
-        val startLng: Double,
-        val dstLat: Double,
-        val dstLng: Double
-    )
 }
