@@ -97,33 +97,37 @@ private fun Application.module() {
 
         post("/route") {
             val query = call.receive<Query>()
-            val routes = RouteFinder.findRoutes(query.start.lat, query.start.lng, query.destination.lat, query.destination.lng)
+            kotlin.runCatching {
+                val routes = RouteFinder.findRoutes(query.start.lat, query.start.lng, query.destination.lat, query.destination.lng)
 
-            val uuid = UUID.randomUUID().toString()
-            val routeResult = RouteResult(
-                id = uuid,
-                mergedID = routes.booking?.bookingID ?: "---",
-                standardGeometry = RouteGeometry(
-                    path = routes.standardRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
-                    polyline = routes.standardRoute?.overview_polyline?.points ?: ""
-                ),
-                standardMeta = RouteMeta(
-                    CO2 = routes.standardCO2,
-                    time = routes.standardTime,
-                    distance = routes.standardDistance
-                ),
-                mergedGeometry = RouteGeometry(
-                    path = routes.mergedRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
-                    polyline = routes.mergedRoute?.overview_polyline?.points ?: ""
-                ),
-                mergedMeta = RouteMeta(
-                    CO2 = routes.mergedCO2,
-                    time = routes.mergedTime,
-                    distance = routes.mergedDistance
+                val uuid = UUID.randomUUID().toString()
+                val routeResult = RouteResult(
+                    id = uuid,
+                    mergedID = routes.booking?.bookingID ?: "---",
+                    standardGeometry = RouteGeometry(
+                        path = routes.standardRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
+                        polyline = routes.standardRoute?.overview_polyline?.points ?: ""
+                    ),
+                    standardMeta = RouteMeta(
+                        CO2 = routes.standardCO2,
+                        time = routes.standardTime,
+                        distance = routes.standardDistance
+                    ),
+                    mergedGeometry = RouteGeometry(
+                        path = routes.mergedRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
+                        polyline = routes.mergedRoute?.overview_polyline?.points ?: ""
+                    ),
+                    mergedMeta = RouteMeta(
+                        CO2 = routes.mergedCO2,
+                        time = routes.mergedTime,
+                        distance = routes.mergedDistance
+                    )
                 )
-            )
-            PendingRoutes.addRoute(uuid, routes)
-            call.respond(routeResult)
+                PendingRoutes.addRoute(uuid, routes)
+                call.respond(routeResult)
+            }.onFailure {
+                call.respond(HttpStatusCode.InternalServerError)
+            }
         }
 
         post("/confirm") {
