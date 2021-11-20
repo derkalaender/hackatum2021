@@ -20,6 +20,7 @@ import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
+import routefinding.RouteFinder
 import sixtapi.SixtAPI
 import util.DirectionsOptions
 
@@ -66,10 +67,8 @@ private fun Application.module() {
 
         post("/directions") {
             // TODO proper error handling
-            val (lngSrc, latSrc, lngDst, latDst) = call.receive<DirectionsOptions>()
-
-            val directions = GoogleAPI.getDirections(lngSrc, latSrc, lngDst, latDst)
-
+            val query = call.receive<Query>()
+            val directions = GoogleAPI.getDirections(query.start.lat, query.start.lng, query.destination.lat, query.destination.lng)
             val route = directions?.routes?.minByOrNull { r ->
                 r.legs.sumOf { it.duration.value }
             } ?: run {
@@ -84,6 +83,28 @@ private fun Application.module() {
 
         get("/bookings") {
             call.respond(SixtAPI.getBookings())
+        }
+
+        post("/route") {
+            val query = call.receive<Query>()
+            val routes = RouteFinder.findRoutes(query.start.lat, query.start.lng, query.destination.lat, query.destination.lng)
+            call.respond(routes)
+
+            if (routes.mergedDistance < routes.standardDistance && routes.mergedRoute != null && routes.booking != null) {
+                SixtAPI.deleteBooking(routes.booking.bookingID)
+
+                kotlin.runCatching {
+                    val (startLat, startLng) = routes.mergedRoute.legs.first().start_location
+                    val (destLat, destLng) = routes.mergedRoute.legs.last().end_location
+                    SixtAPI.postBooking(startLat, startLng, destLat, destLng)
+                }
+            } else {
+                kotlin.runCatching {
+                    val (startLat, startLng) = routes.standardRoute!!.legs.first().start_location
+                    val (destLat, destLng) = routes.standardRoute.legs.last().end_location
+                    SixtAPI.postBooking(startLat, startLng, destLat, destLng)
+                }
+            }
         }
     }
 }
