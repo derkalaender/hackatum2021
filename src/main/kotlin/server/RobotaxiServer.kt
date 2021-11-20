@@ -1,24 +1,22 @@
-package gui
+package server
 
 import io.ktor.application.Application
 import io.ktor.application.call
-import io.ktor.http.content.default
-import io.ktor.http.content.defaultResource
-import io.ktor.http.content.file
-import io.ktor.http.content.files
-import io.ktor.http.content.resource
-import io.ktor.http.content.resources
-import io.ktor.http.content.static
-import io.ktor.http.content.staticRootFolder
-import io.ktor.response.respondFile
+import io.ktor.application.install
+import io.ktor.features.CORS
+import io.ktor.features.ContentNegotiation
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.response.respond
 import io.ktor.routing.get
 import io.ktor.routing.routing
+import io.ktor.serialization.json
 import io.ktor.server.engine.ApplicationEngine
 import io.ktor.server.engine.applicationEngineEnvironment
 import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import java.io.File
+import sixtapi.SixtAPI
 
 object RobotaxiGui {
     private lateinit var server: ApplicationEngine
@@ -44,12 +42,21 @@ object RobotaxiGui {
 }
 
 private fun Application.module() {
-    routing {
-        static {
-            resource("/", "index.html")
-            resources("css")
-            resources("js")
-        }
+    install(CORS) {
+        anyHost()
+        method(HttpMethod.Post)
+        method(HttpMethod.Get)
+        method(HttpMethod.Options)
+        header(HttpHeaders.ContentType)
+    }
 
+    install(ContentNegotiation) {
+        json()
+    }
+
+    routing {
+        get("/vehicles") {
+            call.respond(SixtAPI.getVehicles())
+        }
     }
 }
