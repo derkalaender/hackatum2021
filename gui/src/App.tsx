@@ -2,11 +2,12 @@ import {Box, Grid} from "@mui/material";
 import Controls, {TextFieldId} from "./Controls";
 import React, {ChangeEvent, useEffect, useState} from "react";
 import {Status, Wrapper} from "@googlemaps/react-wrapper";
-import {Vehicle} from "./types";
-import {getBookings, getDirections, getVehicles} from "./api";
+import {RouteResult, Vehicle} from "./types";
+import {getBookings, getDirections, getVehicles, searchRoutes} from "./api";
 import Polyline from "./map/Polyline";
 import Marker from "./map/Marker";
 import Map from "./map/Map";
+import {createLatLng} from "./util";
 
 const render = (status: Status) => {
     switch (status) {
@@ -19,6 +20,19 @@ const render = (status: Status) => {
     }
 }
 
+const decodePolyline = (polyline: string): google.maps.LatLng[] => {
+    return google.maps.geometry.encoding.decodePath(polyline)
+}
+
+const RoutResultRender = ({route, map}: { route: RouteResult, map?: google.maps.Map }) => {
+    return (
+        <>
+            <Polyline path={decodePolyline(route.standardGeometry.polyline)} map={map}/>
+            <Polyline path={decodePolyline(route.mergedGeometry.polyline)} map={map}/>
+        </>
+    )
+}
+
 const App = () => {
     const latlngRegex = "\\d+(\\.\\d+)?,\\w?.\\d+(\\.\\d+)?"
 
@@ -29,14 +43,15 @@ const App = () => {
     const [destinationLatLng, setDestinationLatLng] = useState<string>("")
     const [selectedTextField, setSelectedTextField] = useState<TextFieldId>(TextFieldId.START)
 
+    const [routeResult, setRouteResult] = useState<RouteResult | null>(null)
+
     const correctLatLngFormat = (): boolean => {
         return [startLatLng, destinationLatLng].every(s => s.match(latlngRegex))
     }
 
     const latLngToMarker = (latlng: string, label: string) => {
-        if(latlng.match(latlngRegex)) {
-            let splitted = latlng.split(",")
-            let converted = new google.maps.LatLng(parseFloat(splitted[0].trim()), parseFloat(splitted[1].trim()))
+        if (latlng.match(latlngRegex)) {
+            let converted = createLatLng(latlng)
             return <Marker position={converted} label={label}/>
         }
     }
@@ -63,7 +78,13 @@ const App = () => {
     }
 
     const onSearch = () => {
-
+        searchRoutes({
+            start: createLatLng(startLatLng),
+            destination: createLatLng(destinationLatLng)
+        }).then(result => {
+            console.log(result)
+            setRouteResult(result)
+        })
     }
 
     const onSubmit = () => {
@@ -82,14 +103,12 @@ const App = () => {
         getBookings().then(bookings => {
             Promise.all(bookings.map(b =>
                 getDirections({
-                    startLat: b.pickupLat,
-                    startLng: b.pickupLng,
-                    dstLat: b.destinationLat,
-                    dstLng: b.destinationLng
+                    start: createLatLng(b.pickupLat, b.pickupLng),
+                    destination: createLatLng(b.destinationLat, b.destinationLng),
                 })
             )).then(routes => {
                 // @ts-ignore
-                setBookedRoutes(routes.map(r => google.maps.geometry.encoding.decodePath(r.overview_polyline["points"])))
+                setBookedRoutes(routes.map(r => decodePolyline(r.polyline)))
             })
         })
     }, [])
@@ -112,6 +131,7 @@ const App = () => {
 
                             {latLngToMarker(startLatLng, "A")}
                             {latLngToMarker(destinationLatLng, "B")}
+                            {routeResult && <RoutResultRender route={routeResult}/>}
                         </Map>
                     </Wrapper>
                 </Grid>

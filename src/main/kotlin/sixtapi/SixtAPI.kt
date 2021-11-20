@@ -83,14 +83,12 @@ object SixtAPI {
 
     suspend fun getVehicles(): List<Vehicle> {
         val string = get("/vehicles")
-        return runCatching<List<VehicleJson>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
-            .map { Vehicle(it.charge, it.lat, it.lng, VehicleStatus.stringToStatus(it.status), it.vehicleID) }
+        return runCatching<List<Vehicle>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
     }
 
     suspend fun getVehicle(id: String): Vehicle? {
         val string = get("/vehicle/$id")
-        return runCatching<VehicleJson> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
-            ?.let { Vehicle(it.charge, it.lat, it.lng, VehicleStatus.stringToStatus(it.status), it.vehicleID) }
+        return runCatching<Vehicle> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
     }
 
     suspend fun getBookings(): List<Booking> {
