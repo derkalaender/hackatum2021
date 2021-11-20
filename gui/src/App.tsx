@@ -1,5 +1,5 @@
 import {Box, Grid} from "@mui/material";
-import Controls, {TextFieldId} from "./Controls";
+import Controls, {DisplayValues, TextFieldId} from "./Controls";
 import React, {ChangeEvent, useEffect, useState} from "react";
 import {Status, Wrapper} from "@googlemaps/react-wrapper";
 import {RouteResult, Vehicle} from "./types";
@@ -27,8 +27,8 @@ const decodePolyline = (polyline: string): google.maps.LatLng[] => {
 const RoutResultRender = ({route, map}: { route: RouteResult, map?: google.maps.Map }) => {
     return (
         <>
-            <Polyline path={decodePolyline(route.standardGeometry.polyline)} map={map}/>
-            <Polyline path={decodePolyline(route.mergedGeometry.polyline)} map={map}/>
+            <Polyline path={decodePolyline(route.standardGeometry.polyline)} strokeColor={"red"} map={map}/>
+            <Polyline path={decodePolyline(route.mergedGeometry.polyline)} strokeColor={"green"} map={map}/>
         </>
     )
 }
@@ -70,6 +70,7 @@ const App = () => {
         switch (selectedTextField) {
             case TextFieldId.START:
                 setStartLatLng(coords)
+                setSelectedTextField(TextFieldId.DESTINATION)
                 break
             case TextFieldId.DESTINATION:
                 setDestinationLatLng(coords)
@@ -89,6 +90,17 @@ const App = () => {
 
     const onSubmit = () => {
 
+    }
+
+    const createDisplayValues = (): DisplayValues => {
+        return {
+            distanceStandard: routeResult?.standardMeta?.distance,
+            timeStandard: routeResult?.standardMeta?.time,
+            co2Standard: routeResult?.standardMeta?.CO2,
+            distanceEco: routeResult?.mergedMeta?.distance,
+            timeEco: routeResult?.mergedMeta?.time,
+            co2Eco: routeResult?.mergedMeta?.CO2,
+        }
     }
 
     // get vehicles
@@ -140,7 +152,8 @@ const App = () => {
                               destinationValue={destinationLatLng} onStartValueChange={onStartValueChanged}
                               onDestinationValueChange={onDestinationValueChanged} searchEnabled={correctLatLngFormat()}
                               submitEnabled={correctLatLngFormat()} onSelectTextField={setSelectedTextField}
-                              selectedTextField={selectedTextField} onSearch={onSearch} onSubmit={onSubmit}/>
+                              selectedTextField={selectedTextField} onSearch={onSearch} onSubmit={onSubmit}
+                              displayValues={createDisplayValues()}/>
                 </Grid>
             </Grid>
         </Grid>
