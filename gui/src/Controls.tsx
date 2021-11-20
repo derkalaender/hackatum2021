@@ -43,13 +43,13 @@ const Controls: React.FC<ControlsProps> = ({
                                            }) => {
 
     const displayDistance = (number: number | undefined): string => {
-        if(number === undefined) return "N/A"
+        if (number === undefined) return "N/A"
 
         return (number / 1000).toFixed(2) + "km"
     }
 
     const displayTime = (number: number | undefined): string => {
-        if(number === undefined) return "N/A"
+        if (number === undefined) return "N/A"
 
         return (number / 60 / 60).toFixed(2) + "h"
     }
@@ -60,11 +60,18 @@ const Controls: React.FC<ControlsProps> = ({
         return ((1 - displayValues.co2Eco / displayValues.co2Standard) * 100).toFixed(0) + "%"
     }
 
-    const toolTipCO2 = (): string => {
+    const toolTipCO2 = () => {
         if (displayValues?.co2Standard === undefined || displayValues?.co2Eco === undefined) return "N/A"
 
-        return "A normal trip would cost the environment a total of " + displayValues.co2Standard.toFixed(2) + "kg of CO2.\n" +
-            "But with carpooling it's only " + displayValues.co2Eco.toFixed(2) + "kg of CO2!"
+        return <>
+            <p>
+                A normal trip would cost the environment a total of {displayValues.co2Standard.toFixed(2)} kg of CO2.
+            </p>
+            <p>
+                But with carpooling it's only {displayValues.co2Eco.toFixed(2)} kg of CO2!
+            </p>
+        </>
+
     }
 
     return (
