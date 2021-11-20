@@ -4,9 +4,11 @@ import data.Location
 import googleapi.GoogleAPI
 import googleapi.json.Directions
 import googleapi.json.DirectionsRoute
+import kotlinx.serialization.Serializable
 import sixtapi.SixtAPI
 import sixtapi.json.VehicleStatus
 
+@Serializable
 class RouteSearchResult(
     val standardDirection : Directions?,
     val mergedDirection : Directions?
