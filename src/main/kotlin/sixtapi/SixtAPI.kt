@@ -98,8 +98,8 @@ object SixtAPI {
         return runCatching<Booking> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
     }
 
-    suspend fun postBooking(startLat: Double, startLgn: Double, dstLat: Double, dstLng: Double) {
-        post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn, UUID.randomUUID().toString(), null, BookingStatus.CREATED))
+    suspend fun postBooking(startLat: Double, startLgn: Double, dstLat: Double, dstLng: Double, id: String) {
+        post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn, id, null, BookingStatus.CREATED))
     }
 
     suspend fun deleteBooking(id: String) {

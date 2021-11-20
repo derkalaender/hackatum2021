@@ -10,6 +10,29 @@ import sixtapi.json.Booking
 import sixtapi.json.VehicleStatus
 
 @Serializable
+data class RouteResult(
+    val id: String,
+    val mergedID: String,
+    val standardGeometry: RouteGeometry,
+    val standardMeta: RouteMeta,
+    val mergedGeometry: RouteGeometry,
+    val mergedMeta: RouteMeta,
+)
+
+@Serializable
+data class RouteGeometry(
+    val path: List<Location>,
+    val polyline: String
+)
+
+@Serializable
+data class RouteMeta(
+    val CO2: Double,
+    val time: Int,
+    val distance: Int,
+)
+
+@Serializable
 class RouteSearchResult(
     val standardDirection : Directions?,
     val mergedDirection : Directions?,
@@ -33,7 +56,6 @@ class RouteSearchResult(
     val mergedTime = mergedDirection?.let { RouteFinder.calculateTime(it) } ?: -1
     val standardRoute : DirectionsRoute? =  standardDirection?.let { RouteFinder.getShortestRoute(it) }
     val mergedRoute : DirectionsRoute? = mergedDirection?.let { RouteFinder.getShortestRoute(it) }
-
 }
 
 object RouteFinder {
