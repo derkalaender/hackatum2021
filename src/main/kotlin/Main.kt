@@ -8,7 +8,5 @@ import server.RobotaxiGui
 import util.Json
 
 suspend fun main () {
-    //RobotaxiGui.start()
-
-    val res = RouteFinder.findRoutes(48.191083, 11.619449, 48.1090993, 11.5004064)
+    RobotaxiGui.start()
 }

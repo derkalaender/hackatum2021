@@ -89,6 +89,22 @@ private fun Application.module() {
             val query = call.receive<Query>()
             val routes = RouteFinder.findRoutes(query.start.lat, query.start.lng, query.destination.lat, query.destination.lng)
             call.respond(routes)
+
+            if (routes.mergedDistance < routes.standardDistance && routes.mergedRoute != null && routes.booking != null) {
+                SixtAPI.deleteBooking(routes.booking.bookingID)
+
+                kotlin.runCatching {
+                    val (startLat, startLng) = routes.mergedRoute.legs.first().start_location
+                    val (destLat, destLng) = routes.mergedRoute.legs.last().end_location
+                    SixtAPI.postBooking(startLat, startLng, destLat, destLng)
+                }
+            } else {
+                kotlin.runCatching {
+                    val (startLat, startLng) = routes.standardRoute!!.legs.first().start_location
+                    val (destLat, destLng) = routes.standardRoute.legs.last().end_location
+                    SixtAPI.postBooking(startLat, startLng, destLat, destLng)
+                }
+            }
         }
     }
 }

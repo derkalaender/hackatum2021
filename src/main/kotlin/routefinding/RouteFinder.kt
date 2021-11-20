@@ -6,12 +6,14 @@ import googleapi.json.Directions
 import googleapi.json.DirectionsRoute
 import kotlinx.serialization.Serializable
 import sixtapi.SixtAPI
+import sixtapi.json.Booking
 import sixtapi.json.VehicleStatus
 
 @Serializable
 class RouteSearchResult(
     val standardDirection : Directions?,
-    val mergedDirection : Directions?
+    val mergedDirection : Directions?,
+    val booking: Booking?
 ) {
     companion object {
         fun calcCO2(kwH: Double) : Double {
@@ -19,7 +21,7 @@ class RouteSearchResult(
         }
 
         fun calcKWH(dist: Int) : Double {
-            return TODO()
+            return dist * 1.724137931034483e-4
         }
     }
 
@@ -80,11 +82,11 @@ object RouteFinder {
                 waypoints = travelPoints.subList(0, 2).map { Pair(it.second.lat, it.second.lng) }
             )!!
             //TODO check error
-            direction
+            Pair(direction, booking)
         }
         val shortestDirection = kotlin.runCatching {
             shortestPickupDirection
-                .minByOrNull { directions ->
+                .minByOrNull { (directions, _) ->
                     directions.routes.minByOrNull { route ->
                         route.legs.sumOf { it.distance.value }
                     }!!
@@ -92,7 +94,7 @@ object RouteFinder {
                 }
         }.getOrNull()
 
-        return RouteSearchResult(directionSrcToDst, shortestDirection)
+        return RouteSearchResult(directionSrcToDst, shortestDirection?.first, shortestDirection?.second)
     }
 
     fun calculateDistance(directions: Directions) : Int {
