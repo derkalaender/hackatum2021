@@ -89,7 +89,9 @@ object SixtAPI {
 
     suspend fun getBookings(): List<Booking> {
         val string = get("/bookings")
-        return runCatching<List<Booking>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+        return runCatching<List<Booking>> { Json.jsonTranscoder.decodeFromString(string) }.onFailure {
+            println(it)
+        }.getOrElse { return listOf() }
     }
 
     suspend fun getBooking(id: String): Booking? {

@@ -1,7 +1,6 @@
 import {Card} from "@mui/material";
 import {useEffect} from "react";
-import {getVehicles} from "./api";
-import CarOverlay from "./CarOverlay";
+import {getBookings, getVehicles} from "./api";
 
 const Map = () => {
     // setup Google Maps
@@ -11,6 +10,7 @@ const Map = () => {
             zoom: 11
         });
 
+        // display vehicles
         getVehicles().then(vehicles => {
             console.log(vehicles)
             for (let v of vehicles) {
@@ -21,6 +21,10 @@ const Map = () => {
                 })
             }
         });
+
+        getBookings().then(bookings => {
+            console.log(bookings)
+        })
     })
 
     return (

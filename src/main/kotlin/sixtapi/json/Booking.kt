@@ -9,7 +9,7 @@ data class Booking(
     val pickupLat: Double,
     val pickupLng: Double,
     val bookingID: String,
-    val vehicleID: String?,
+    val vehicleID: String? = null,
     val status: BookingStatus
 )
 
