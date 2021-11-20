@@ -1278,12 +1278,24 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
-"@googlemaps/js-api-loader@^1.12.9":
+"@googlemaps/js-api-loader@^1.11.1", "@googlemaps/js-api-loader@^1.12.9":
   version "1.12.9"
   resolved "https://registry.yarnpkg.com/@googlemaps/js-api-loader/-/js-api-loader-1.12.9.tgz#d9fdd8273aef27590d9254f9ae0573e9919ae4d1"
   integrity sha512-pa0T5mCvmWIs3I7LGFm8naFhIsEvHMDG5IENJ67uhMLWLFy821L95V1Ez1Lo/Jvjh06UMg9L4DCiCxsmwnFglw==
   dependencies:
     fast-deep-equal "^3.1.3"
+
+"@googlemaps/react-wrapper@^1.1.12":
+  version "1.1.12"
+  resolved "https://registry.yarnpkg.com/@googlemaps/react-wrapper/-/react-wrapper-1.1.12.tgz#057a080052e0249eb6950a05272d088c3686a780"
+  integrity sha512-oLnYKhv7U+eXIzDulZzzP4syzlUa9s54Fa0a1pTV9oSsSl3g19ikDNJOQCquZsLYY1dws7wnbJxEw8rbKZziHw==
+  dependencies:
+    "@googlemaps/js-api-loader" "^1.11.1"
+
+"@googlemaps/typescript-guards@^1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@googlemaps/typescript-guards/-/typescript-guards-1.0.2.tgz#881ae14adc565b8b761ee3c9c964f9618a0327ff"
+  integrity sha512-i2QtgSfWeweCIhSdwZOjRsHa4SUKRLE+5V8P3XmkRAg1FibjkNPojHCq4ZjaCG1CJShh2lzCS3D/wpFLDt5PIg==
 
 "@hapi/address@2.x.x":
   version "2.1.4"
@@ -5002,6 +5014,11 @@ fast-deep-equal@^3.1.1, fast-deep-equal@^3.1.3:
   version "3.1.3"
   resolved "https://registry.yarnpkg.com/fast-deep-equal/-/fast-deep-equal-3.1.3.tgz#3a7d56b559d6cbc3eb512325244e619a65c6c525"
   integrity sha512-f3qQ9oQy9j2AhBe/H9VC91wLmKBCCU/gDOnKNAYG5hswO7BLKj09Hc5HYNz9cGI++xlpDCIgDaitVs03ATR84Q==
+
+fast-equals@^2.0.3:
+  version "2.0.3"
+  resolved "https://registry.yarnpkg.com/fast-equals/-/fast-equals-2.0.3.tgz#7039b0a039909f345a2ce53f6202a14e5f392efc"
+  integrity sha512-0EMw4TTUxsMDpDkCg0rXor2gsg+npVrMIHbEhvD0HZyIhUX6AktC/yasm+qKwfyswd06Qy95ZKk8p2crTo0iPA==
 
 fast-glob@^3.1.1:
   version "3.2.5"
