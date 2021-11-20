@@ -3,12 +3,12 @@ package data
 import java.time.LocalDateTime
 import kotlin.time.Duration
 
-data class Trip(
+data class PlannedTrip(
     val startTime: LocalDateTime,
     val plannedEndTime: LocalDateTime,
-    val routes: MutableList<Route>,
+    val currentRoute: Route,
     val timeBuffer: Duration,
-    val person: Person,
-    val startLocation: Location,
-    val endLocation: Location
+    val associatedTrips: List<Trip>,
+    val isActive: Boolean,
+    val assignedCar: Car?
 )
