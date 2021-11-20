@@ -7,15 +7,6 @@ import io.ktor.client.features.json.serializer.*
 import kotlinx.serialization.json.Json
 
 object Network {
-    val jsonTranscoder = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = true
-        isLenient = true
-        prettyPrint = true
-        allowSpecialFloatingPointValues = true
-        allowStructuredMapKeys = true
-    }
-
     fun createClient() : HttpClient = HttpClient(CIO) {
         install(JsonFeature) {
             serializer = KotlinxSerializer(kotlinx.serialization.json.Json {
