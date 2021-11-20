@@ -14,48 +14,48 @@ enum class GeocodeStatus {
 }
 
 data class Geocode(
-    val results: List<GeocodeResult>,
-    val status: GeocodeStatus
-)
+    val results: List<GeocodeResult> = listOf(),
+    val status: GeocodeStatus = GeocodeStatus.UNKNOWN_ERROR
+) {
+    fun toJson() : GeocodeJson {
+        return GeocodeJson(
+            results,
+            status.name
+        )
+    }
+}
 
 @Serializable
 data class GeocodeJson(
-    val results: List<GeocodeResult>,
-    val status: String
+    val results: List<GeocodeResult> = listOf(),
+    val status: String = ""
 )
 
 @Serializable
 data class GeocodeResult(
-    val address_components: List<GeocodeAddressComponent>,
-    val formatted_address: String,
-    val geometry: GeocodeGeometry,
-    val place_id: String,
-    val plus_code: GeocodePlusCode,
-    val types: List<String>
+    val address_components: List<GeocodeAddressComponent> = listOf(),
+    val formatted_address: String = "",
+    val geometry: GeocodeGeometry = GeocodeGeometry(),
+    val place_id: String = "",
+    val types: List<String> = listOf()
 )
 
 @Serializable
 data class GeocodeAddressComponent(
-    val long_name: String,
-    val short_name: String,
-    val types: List<String>
+    val long_name: String = "",
+    val short_name: String = "",
+    val types: List<String> = listOf()
 )
 
 @Serializable
 data class GeocodeGeometry(
-    val location: Location,
-    val location_type: String,
-    val viewport: GeocodeViewport
-)
-
-@Serializable
-data class GeocodePlusCode(
-    val compound_code: String,
-    val global_code: String
+    val location: Location = Location(),
+    val location_type: String = "",
+    val viewport: GeocodeViewport = GeocodeViewport()
 )
 
 @Serializable
 data class GeocodeViewport(
-    val northeast: Location,
-    val southwest: Location
+    val northeast: Location = Location(),
+    val southwest: Location = Location()
 )

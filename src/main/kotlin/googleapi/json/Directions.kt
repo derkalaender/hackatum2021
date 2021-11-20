@@ -18,7 +18,15 @@ data class Directions(
     val geocoded_waypoints: List<DirectionsGeocodedWaypoint>,
     val routes: List<DirectionsRoute>,
     val status: DirectionsStatus
-)
+) {
+    fun toJson() : DirectionsJson {
+        return DirectionsJson(
+            geocoded_waypoints,
+            routes,
+            status.name
+        )
+    }
+}
 
 @Serializable
 data class DirectionsJson(
