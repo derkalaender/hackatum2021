@@ -9,6 +9,7 @@ import kotlinx.serialization.Serializable
 import sixtapi.SixtAPI
 import sixtapi.json.Booking
 import sixtapi.json.VehicleStatus
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 @Serializable
@@ -106,37 +107,51 @@ object RouteFinder {
         val bookings = SixtAPI.getBookings()
         //TODO check error
         val shortestPickupDirection = bookings.map { booking ->
-//            val firstDestMatrix = GoogleAPI.getMatrix(
-//                origins = listOf(Pair(booking.pickupLat.toString(), booking.pickupLng.toString())),
-//                destinations =
-//            )
-
-            
-            val bookingSrcMatrix = GoogleAPI.getMatrix(
+            val firstDestMatrix = GoogleAPI.getMatrix(
                 origins = listOf(Pair(booking.pickupLat.toString(), booking.pickupLng.toString())),
                 destinations = listOf(
                     Pair(booking.destinationLat.toString(), booking.destinationLng.toString()),
                     Pair(srcLat.toString(), srcLng.toString()),
-                    Pair(dstLat.toString(), dstLng.toString()),
                 )
             )!!
-            //TODO check error
-            val distBookingDst = bookingSrcMatrix.rows.first().elements[0]
-            val distNewSrc = bookingSrcMatrix.rows.first().elements[1]
-            val distNewDst = bookingSrcMatrix.rows.first().elements[2]
+            val distBookingDst = firstDestMatrix.rows.first().elements[0].distance.value
+            val distNewSrc = firstDestMatrix.rows.first().elements[1].distance.value
 
-            val travelPoints = listOf(
-                Pair(distBookingDst, Location(booking.destinationLat, booking.destinationLng)),
-                Pair(distNewSrc, Location(srcLat, srcLng)),
-                Pair(distNewDst, Location(dstLat, dstLng))
-            ).sortedBy { it.first.distance.value }
+            val points = mutableListOf<Location>()
+            points.add(Location(booking.pickupLat, booking.pickupLng))
+            if(distBookingDst < distNewSrc) points.add(Location(booking.destinationLat, booking.destinationLng))
+            else points.add(Location(srcLat, srcLng))
+
+            if(points.last() == Location(booking.destinationLat, booking.destinationLng)) {
+                points.add(Location(srcLat, srcLng))
+                points.add(Location(dstLat, dstLng))
+            } else { //picked up
+                val secondDestMatrix = GoogleAPI.getMatrix(
+                    origins = listOf(points.last().let { Pair(it.lat.toString(), it.lng.toString()) }) ,
+                    destinations = listOf(
+                        Pair(booking.destinationLat.toString(), booking.destinationLng.toString()),
+                        Pair(dstLat.toString(), dstLng.toString()),
+                    )
+                )!!
+
+                val distBookingDst2 = secondDestMatrix.rows.first().elements[0].distance.value
+                val distNewDst = secondDestMatrix.rows.first().elements[1].distance.value
+
+                if(distBookingDst2 < distNewDst) {
+                    points.add(Location(booking.destinationLat, booking.destinationLng))
+                    points.add(Location(dstLat, dstLng))
+                } else {
+                    points.add(Location(dstLat, dstLng))
+                    points.add(Location(booking.destinationLat, booking.destinationLng))
+                }
+            }
 
             val direction = GoogleAPI.getDirections(
-                startLat = booking.pickupLat,
-                startLng = booking.pickupLng,
-                dstLat = travelPoints[2].second.lat,
-                dstLng = travelPoints[2].second.lng,
-                waypoints = travelPoints.subList(0, 2).map { Pair(it.second.lat, it.second.lng) }
+                startLat = points[0].lat,
+                startLng = points[0].lng,
+                dstLat = points[3].lat,
+                dstLng = points[3].lng,
+                waypoints = points.subList(1, 3).map { Pair(it.lat, it.lng) }
             )!!
             //TODO check error
             Pair(direction, booking)
@@ -179,8 +194,12 @@ object RouteFinder {
     private fun subStepsIn(start: Location, dest: Location, directions: Directions): List<DirectionsStep> {
         return directions.routes.minByOrNull { route -> route.legs.sumOf { it.distance.value } }!!
             .legs.flatMap { it.steps }
-            .dropWhile { it.start_location != start }
-            .dropLastWhile { it.end_location != dest }
+            .dropWhile {
+                abs(it.start_location.lat - start.lat) > 0.002 && abs(it.start_location.lng - start.lng) > 0.002
+            }
+            .dropLastWhile {
+                abs(it.end_location.lat - dest.lat) > 0.002 && abs(it.end_location.lng - dest.lng) > 0.002
+            }
     }
 
     fun getDistanceIn(start: Location, dest: Location, directions: Directions): Int {
