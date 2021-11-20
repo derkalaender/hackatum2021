@@ -1,10 +1,14 @@
 package sixtapi
 
-import io.ktor.client.call.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import io.ktor.client.call.receive
+import io.ktor.client.request.delete
+import io.ktor.client.request.get
+import io.ktor.client.request.headers
+import io.ktor.client.request.post
+import io.ktor.client.statement.HttpResponse
 import kotlinx.serialization.decodeFromString
 import sixtapi.json.Booking
+import sixtapi.json.Person
 import sixtapi.json.Vehicle
 import util.Json
 import util.Network
@@ -12,7 +16,7 @@ import util.Network
 object SixtAPI {
     const val endpoint = "https://us-central1-sixt-hackatum-2021-black.cloudfunctions.net/api"
 
-    private suspend fun get(item: String) : String {
+    private suspend fun get(item: String): String {
         val client = Network.createClient()
 
         val response =
@@ -26,17 +30,17 @@ object SixtAPI {
         return string
     }
 
-    private suspend fun post(item: String, await: Boolean, json: Any? = null) : String {
+    private suspend fun post(item: String, await: Boolean, json: Any? = null): String {
         val client = Network.createClient()
 
         val response =
             kotlin.runCatching {
                 client.post<HttpResponse>("$endpoint$item") {
-                    if(json != null) {
+                    if (json != null) {
                         headers {
                             append("content-type", "application/json")
                         }
-                        body=json
+                        body = json
                     }
                 }
             }
@@ -45,7 +49,7 @@ object SixtAPI {
                     return ""
                 }
 
-        if(await) {
+        if (await) {
             val string = response.receive<String>()
             client.close()
             return string
@@ -54,7 +58,7 @@ object SixtAPI {
         return ""
     }
 
-    private suspend fun delete(item: String, await: Boolean) : String {
+    private suspend fun delete(item: String, await: Boolean): String {
         val client = Network.createClient()
 
         val response =
@@ -64,7 +68,7 @@ object SixtAPI {
                     return ""
                 }
 
-        if(await) {
+        if (await) {
             val string = response.receive<String>()
             client.close()
             return string
@@ -78,20 +82,31 @@ object SixtAPI {
         return runCatching<List<Vehicle>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
     }
 
-    suspend fun getVehicle(id: String) : Vehicle? {
+    suspend fun getVehicle(id: String): Vehicle? {
         val string = get("/vehicle/$id")
         return runCatching<Vehicle> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
     }
 
+    suspend fun getBookings(): List<Booking> {
+        val string = get("/bookings")
+        return runCatching<List<Booking>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+    }
+
+    suspend fun getBooking(id: String): Booking? {
+        val string = get("/bookings/$id")
+        return runCatching<Booking> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
+    }
+
     suspend fun postBooking(startLat: Double, startLgn: Double, dstLat: Double, dstLng: Double) {
-        post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn))
+        // not needed
+        // post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn))
     }
 
     suspend fun deleteBooking(id: String) {
         delete("/bookings/$id", false)
     }
 
-    suspend fun assignVehiToBook(bID: String, vID: String) {
+    suspend fun assignVehicleToBook(bID: String, vID: String) {
         post("/bookings/$bID/assignVehicle/$vID", false)
     }
 
@@ -101,5 +116,13 @@ object SixtAPI {
 
     suspend fun passGotOff(bID: String) {
         post("/bookings/$bID/passengerGotOff", false)
+    }
+
+    suspend fun getPersons(): List<Person> {
+        return emptyList()
+    }
+
+    suspend fun getPersonOfBooking(bID: String): Person? {
+        return getPersons().find { it.bookingID == bID }
     }
 }

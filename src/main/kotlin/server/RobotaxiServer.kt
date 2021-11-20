@@ -1,5 +1,6 @@
 package server
 
+import googleapi.GoogleAPI
 import io.ktor.application.Application
 import io.ktor.application.call
 import io.ktor.application.install
@@ -57,6 +58,24 @@ private fun Application.module() {
     routing {
         get("/vehicles") {
             call.respond(SixtAPI.getVehicles())
+        }
+
+        get("/directions") {
+            // TODO proper error handling
+            val lngSrc = call.request.queryParameters["lngSrc"]!!.toDouble()
+            val latSrc = call.request.queryParameters["latSrc"]!!.toDouble()
+            val lngDst = call.request.queryParameters["lngDst"]!!.toDouble()
+            val latDst = call.request.queryParameters["latDst"]!!.toDouble()
+
+            val route = GoogleAPI.getDirections(lngSrc, latSrc, lngDst, latDst)!!.routes.minByOrNull { r ->
+                r.legs.sumOf { it.duration.value }
+            }!!
+
+            call.respond(route)
+        }
+
+        get("/bookings") {
+            call.respond(SixtAPI.getBookings())
         }
     }
 }
