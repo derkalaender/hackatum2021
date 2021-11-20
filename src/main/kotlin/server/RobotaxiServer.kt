@@ -1,5 +1,6 @@
 package server
 
+import data.PendingRoutes
 import googleapi.GoogleAPI
 import io.ktor.application.Application
 import io.ktor.application.call
@@ -21,8 +22,12 @@ import io.ktor.server.engine.connector
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import routefinding.RouteFinder
+import routefinding.RouteGeometry
+import routefinding.RouteMeta
+import routefinding.RouteResult
 import sixtapi.SixtAPI
 import util.DirectionsOptions
+import java.util.*
 
 object RobotaxiGui {
     private lateinit var server: ApplicationEngine
@@ -78,7 +83,12 @@ private fun Application.module() {
                 return@post
             }
 
-            call.respond(route)
+            val routeGeometry = RouteGeometry(
+                path = route.legs.map { listOf(it.start_location, it.end_location) }.flatten().distinct(),
+                polyline = route.overview_polyline.points
+            )
+
+            call.respond(routeGeometry)
         }
 
         get("/bookings") {
@@ -88,23 +98,39 @@ private fun Application.module() {
         post("/route") {
             val query = call.receive<Query>()
             val routes = RouteFinder.findRoutes(query.start.lat, query.start.lng, query.destination.lat, query.destination.lng)
-            call.respond(routes)
 
-            if (routes.mergedDistance < routes.standardDistance && routes.mergedRoute != null && routes.booking != null) {
-                SixtAPI.deleteBooking(routes.booking.bookingID)
+            val uuid = UUID.randomUUID().toString()
+            val routeResult = RouteResult(
+                id = uuid,
+                mergedID = routes.booking?.bookingID ?: "---",
+                standardGeometry = RouteGeometry(
+                    path = routes.standardRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
+                    polyline = routes.standardRoute?.overview_polyline?.points ?: ""
+                ),
+                standardMeta = RouteMeta(
+                    CO2 = routes.standardCO2,
+                    time = routes.standardTime,
+                    distance = routes.standardDistance
+                ),
+                mergedGeometry = RouteGeometry(
+                    path = routes.mergedRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
+                    polyline = routes.mergedRoute?.overview_polyline?.points ?: ""
+                ),
+                mergedMeta = RouteMeta(
+                    CO2 = routes.mergedCO2,
+                    time = routes.mergedTime,
+                    distance = routes.mergedDistance
+                )
+            )
+            PendingRoutes.addRoute(uuid, routes)
+            call.respond(routeResult)
+        }
 
-                kotlin.runCatching {
-                    val (startLat, startLng) = routes.mergedRoute.legs.first().start_location
-                    val (destLat, destLng) = routes.mergedRoute.legs.last().end_location
-                    SixtAPI.postBooking(startLat, startLng, destLat, destLng)
-                }
-            } else {
-                kotlin.runCatching {
-                    val (startLat, startLng) = routes.standardRoute!!.legs.first().start_location
-                    val (destLat, destLng) = routes.standardRoute.legs.last().end_location
-                    SixtAPI.postBooking(startLat, startLng, destLat, destLng)
-                }
-            }
+        post("/confirm") {
+            val confirmation = call.receive<Confirmation>()
+
+            if (confirmation.canceled) PendingRoutes.deleteRoute(confirmation.id)
+            else PendingRoutes.registerRoute(confirmation.id, confirmation.selectMerge)
         }
     }
 }

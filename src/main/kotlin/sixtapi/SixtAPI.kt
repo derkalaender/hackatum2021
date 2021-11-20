@@ -11,6 +11,11 @@ import sixtapi.json.*
 import util.Json
 import util.Network
 import java.util.*
+import kotlin.random.Random
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.ExperimentalTime
 
 object SixtAPI {
     const val endpoint = "https://us-central1-sixt-hackatum-2021-black.cloudfunctions.net/api"
@@ -98,8 +103,8 @@ object SixtAPI {
         return runCatching<Booking> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
     }
 
-    suspend fun postBooking(startLat: Double, startLgn: Double, dstLat: Double, dstLng: Double) {
-        post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn, UUID.randomUUID().toString(), null, BookingStatus.CREATED))
+    suspend fun postBooking(startLat: Double, startLgn: Double, dstLat: Double, dstLng: Double, id: String) {
+        post("/bookings", false, Booking(dstLat, dstLng, startLat, startLgn, id, null, BookingStatus.CREATED))
     }
 
     suspend fun deleteBooking(id: String) {
@@ -118,8 +123,18 @@ object SixtAPI {
         post("/bookings/$bID/passengerGotOff", false)
     }
 
+    /**!!!MOCK!!!*/
+    @OptIn(ExperimentalTime::class)
     suspend fun getPersons(): List<Person> {
-        return emptyList()
+        val bookings = getBookings()
+        val rand = Random(123)
+        return bookings.map {
+            Person(
+                timeBuffer = 10.minutes + rand.nextInt(50).minutes,
+                rand.nextInt(5),
+                it.bookingID
+            )
+        }
     }
 
     suspend fun getPersonOfBooking(bID: String): Person? {

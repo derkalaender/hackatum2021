@@ -8,6 +8,30 @@ import kotlinx.serialization.Serializable
 import sixtapi.SixtAPI
 import sixtapi.json.Booking
 import sixtapi.json.VehicleStatus
+import kotlin.math.sqrt
+
+@Serializable
+data class RouteResult(
+    val id: String,
+    val mergedID: String,
+    val standardGeometry: RouteGeometry,
+    val standardMeta: RouteMeta,
+    val mergedGeometry: RouteGeometry,
+    val mergedMeta: RouteMeta,
+)
+
+@Serializable
+data class RouteGeometry(
+    val path: List<Location>,
+    val polyline: String
+)
+
+@Serializable
+data class RouteMeta(
+    val CO2: Double,
+    val time: Int,
+    val distance: Int,
+)
 
 @Serializable
 class RouteSearchResult(
@@ -33,7 +57,6 @@ class RouteSearchResult(
     val mergedTime = mergedDirection?.let { RouteFinder.calculateTime(it) } ?: -1
     val standardRoute : DirectionsRoute? =  standardDirection?.let { RouteFinder.getShortestRoute(it) }
     val mergedRoute : DirectionsRoute? = mergedDirection?.let { RouteFinder.getShortestRoute(it) }
-
 }
 
 object RouteFinder {
@@ -45,11 +68,13 @@ object RouteFinder {
         dstLng: Double
     ): RouteSearchResult {
         val (freeCars, _) = SixtAPI.getVehicles().partition { it.status == VehicleStatus.FREE }
+        val closeCars = freeCars.sortedBy { sqrt((it.lat-srcLat)*(it.lat-srcLat) + (it.lng-srcLng)*(it.lng-srcLng)) }.take(5)
         val freeCarMatrix = GoogleAPI.getMatrix(
             origins = listOf(Pair(srcLat.toString(), srcLng.toString())),
-            destinations = freeCars.map { Pair(it.lat.toString(), it.lng.toString()) }
+            destinations = closeCars.map { Pair(it.lat.toString(), it.lng.toString()) }
         )!! //TODO error
-        val closestCar = freeCars.mapIndexed { index, it -> Pair(freeCarMatrix.rows.first().elements[index].distance.value, it) }.minByOrNull { it.first }
+
+        val closestCar = closeCars.mapIndexed { index, it -> Pair(freeCarMatrix.rows.first().elements[index].distance.value, it) }.minByOrNull { it.first }
         val directionSrcToDst = closestCar?.let { GoogleAPI.getDirections(it.second.lat, it.second.lng, dstLat, dstLng, listOf(Pair(srcLat, srcLng))) }
 
         val bookings = SixtAPI.getBookings()
@@ -86,6 +111,11 @@ object RouteFinder {
         }
         val shortestDirection = kotlin.runCatching {
             shortestPickupDirection
+                .filter { (newDirections, booking) ->
+                    val person = SixtAPI.getPersonOfBooking(booking.bookingID) ?: return@filter false
+                    val oldDirections = GoogleAPI.getDirections(booking.pickupLat, booking.pickupLng, booking.destinationLat, booking.destinationLng) ?: return@filter false
+                    calculateTime(oldDirections) + person.timeBuffer.inWholeSeconds >= calculateTime(newDirections)
+                }
                 .minByOrNull { (directions, _) ->
                     directions.routes.minByOrNull { route ->
                         route.legs.sumOf { it.distance.value }
