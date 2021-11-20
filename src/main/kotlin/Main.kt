@@ -1,5 +1,4 @@
-
-import gui.RobotaxiGui
+import server.RobotaxiGui
 
 fun main() {
     RobotaxiGui.start()

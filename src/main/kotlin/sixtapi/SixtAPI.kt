@@ -5,7 +5,6 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.serialization.decodeFromString
 import sixtapi.json.Booking
-import sixtapi.json.GetVehicles
 import sixtapi.json.Vehicle
 import util.Json
 import util.Network
@@ -76,7 +75,7 @@ object SixtAPI {
 
     suspend fun getVehicles(): List<Vehicle> {
         val string = get("/vehicles")
-        return runCatching<GetVehicles> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+        return runCatching<List<Vehicle>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
     }
 
     suspend fun getVehicle(id: String) : Vehicle? {

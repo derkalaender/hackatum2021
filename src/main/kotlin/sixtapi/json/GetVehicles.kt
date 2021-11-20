@@ -2,8 +2,6 @@ package sixtapi.json
 
 import kotlinx.serialization.Serializable
 
-@Serializable
-class GetVehicles : ArrayList<Vehicle>()
 
 @Serializable
 data class Vehicle(
