@@ -122,8 +122,7 @@ private fun Application.module() {
                         time = routes.mergedTime,
                         distance = routes.mergedDistance
                     ),
-                    oldPolyline = routes.oldDirection?.let { RouteFinder.getShortestRoute(it) }?.overview_polyline?.points
-                    ?: ""
+                    oldPolyline = routes.oldDirection?.let { RouteFinder.getShortestRoute(it) }?.overview_polyline?.points ?: ""
                 )
                 PendingRoutes.addRoute(uuid, routes)
                 call.respond(routeResult)

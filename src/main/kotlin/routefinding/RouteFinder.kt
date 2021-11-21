@@ -184,15 +184,12 @@ object RouteFinder {
                     calculateTime(oldDirections) + person.timeBuffer.inWholeSeconds >= calculateTime(newDirections)
                 }
                 .minByOrNull { (directions, _) ->
-                    directions.routes.minByOrNull { route ->
-                        route.legs.sumOf { it.distance.value }
-                    }!!
-                        .legs.sumOf { it.distance.value }
+                    getShortestRoute(directions).legs.sumOf { it.distance.value }
                 }
         }.getOrNull()
 
-        return RouteSearchResult(directionSrcToDst, shortestDirection?.first, shortestDirection?.second,
-            shortestDirection?.third)
+        return RouteSearchResult(directionSrcToDst, shortestDirection?.third, shortestDirection?.second,
+            shortestDirection?.first)
     }
 
     fun calculateDistance(directions: Directions): Int {

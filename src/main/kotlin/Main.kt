@@ -10,10 +10,12 @@ import util.Json
 import kotlin.math.sqrt
 
 suspend fun main () {
-    RobotaxiGui.start()
+    //RobotaxiGui.start()
 
-    //val test = RouteFinder.findRoutes(48.196188, 11.578347, 48.068866, 11.523638)
-    //println(test)
+    val test = RouteFinder.findRoutes(48.196188, 11.578347, 48.068866, 11.523638)
+    test.standardRoute?.legs?.forEach { println(it.start_location) }
+    test.mergedRoute?.legs?.forEach { println(it.start_location) }
+    println(test)
     //test()
 }
 
