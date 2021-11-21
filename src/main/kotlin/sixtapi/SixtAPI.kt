@@ -6,6 +6,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.headers
 import io.ktor.client.request.post
 import io.ktor.client.statement.HttpResponse
+import io.ktor.util.*
 import kotlinx.serialization.decodeFromString
 import sixtapi.json.*
 import util.Json
@@ -34,6 +35,7 @@ object SixtAPI {
         return string
     }
 
+    @OptIn(InternalAPI::class)
     private suspend fun post(item: String, await: Boolean, json: Any? = null): String {
         val client = Network.createClient()
 
@@ -83,7 +85,8 @@ object SixtAPI {
 
     suspend fun getVehicles(): List<Vehicle> {
         val string = get("/vehicles")
-        return runCatching<List<Vehicle>> { Json.jsonTranscoder.decodeFromString(string) }.getOrElse { return listOf() }
+        return runCatching<List<Vehicle>> { Json.jsonTranscoder.decodeFromString(string) }.onFailure { println(it) }
+            .getOrElse{ return listOf() }
     }
 
     suspend fun getVehicle(id: String): Vehicle? {

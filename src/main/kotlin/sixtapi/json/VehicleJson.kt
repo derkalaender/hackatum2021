@@ -3,7 +3,7 @@ package sixtapi.json
 import kotlinx.serialization.Serializable
 
 enum class VehicleStatus {
-    SERVICE_BLOCK, FREE
+    SERVICE_BLOCK, FREE, BOOKED
 }
 
 @Serializable
