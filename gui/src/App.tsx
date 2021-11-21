@@ -35,10 +35,20 @@ const RoutResultRender = ({route, map}: { route: RouteResult, map?: google.maps.
     )
 }
 
+const SavedRouteRender = ({route, map}: { route: SavedRoute, map?: google.maps.Map }) => {
+    return (
+        <>
+            <Polyline strokeColor={route.color} path={route.path} map={map}/>
+            <Marker position={route.path[route.path.length - 1]} map={map}/>
+        </>
+    )
+}
+
 interface SavedRoute {
     color: string
     polyline: string
     path: google.maps.LatLng[]
+    hidden: boolean
 }
 
 const App = () => {
@@ -75,12 +85,14 @@ const App = () => {
                         return {
                             color: createRandomColor(),
                             polyline: r.polyline,
-                            path: decodePolyline(r.polyline)
+                            path: decodePolyline(r.polyline),
+                            hidden: false
                         }
                     })
                 }
             )).then(routes => {
                 // @ts-ignore
+                console.log(routes)
                 setBookedRoutes(routes)
             })
         })
@@ -124,12 +136,18 @@ const App = () => {
             start: createLocation(startLatLng),
             destination: createLocation(destinationLatLng)
         }).then(result => {
+            console.log(result)
             setRouteResult(result)
+            // TODO do this via ids
+            setBookedRoutes(old => old.map(route => {
+                route.hidden = route.polyline === result.oldPolyline
+                return route
+            }))
         })
     }
 
     const onSubmit = () => {
-
+        // NOP
     }
 
     const createDisplayValues = (): DisplayValues => {
@@ -155,7 +173,6 @@ const App = () => {
         }).join('')
     }
 
-
     return (
         <Grid container direction="column" style={{padding: "40px"}}>
             <Grid item>
@@ -169,8 +186,7 @@ const App = () => {
                             {vehicles.map(v => <Marker key={v.vehicleID}
                                                        position={createLatLng(v.lat, v.lng)}
                                                        icon="taxi.png"/>)}
-                            {bookedRoutes.map(r => <Polyline strokeColor={r.color} path={r.path}/>)}
-                            {bookedRoutes.map(r => <Marker position={r.path[r.path.length - 1]}/>)}
+                            {bookedRoutes.filter(r => !r.hidden).map(r => <SavedRouteRender route={r}/>)}
 
                             {latLngToMarker(startLatLng, "A")}
                             {latLngToMarker(destinationLatLng, "B")}

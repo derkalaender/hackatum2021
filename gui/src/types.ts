@@ -48,4 +48,5 @@ export interface RouteResult {
     standardMeta: RouteMeta
     mergedGeometry: RouteGeometry
     mergedMeta: RouteMeta
+    oldPolyline: string
 }
