@@ -7,7 +7,7 @@ import {getBookings, getDirections, getVehicles, searchRoutes} from "./api";
 import Polyline from "./map/Polyline";
 import Marker from "./map/Marker";
 import Map from "./map/Map";
-import {createLatLng, randomIntFromInterval} from "./util";
+import {createLatLng, createLocation, randomIntFromInterval} from "./util";
 
 const render = (status: Status) => {
     switch (status) {
@@ -35,10 +35,20 @@ const RoutResultRender = ({route, map}: { route: RouteResult, map?: google.maps.
     )
 }
 
+const SavedRouteRender = ({route, map}: { route: SavedRoute, map?: google.maps.Map }) => {
+    return (
+        <>
+            <Polyline strokeColor={route.color} path={route.path} map={map}/>
+            <Marker position={route.path[route.path.length - 1]} map={map}/>
+        </>
+    )
+}
+
 interface SavedRoute {
     color: string
     polyline: string
     path: google.maps.LatLng[]
+    hidden: boolean
 }
 
 const App = () => {
@@ -64,23 +74,25 @@ const App = () => {
     useEffect(() => {
         if (vehicles.length === 0) return
         getBookings().then(bookings => {
-            Promise.all(bookings.map(b => {
+            Promise.all(bookings.filter(b => b.status === "VEHICLE_ASSIGNED").map(b => {
                     // TODO handle vehicle not exists
                     let v = vehicles.find(v => v.vehicleID === b.vehicleID)!
 
                     return getDirections({
-                        start: createLatLng(v.lat, v.lng),
-                        destination: createLatLng(b.destinationLat, b.destinationLng),
+                        start: createLocation(v.lat, v.lng),
+                        destination: createLocation(b.destinationLat, b.destinationLng),
                     }).then<SavedRoute>(r => {
                         return {
                             color: createRandomColor(),
                             polyline: r.polyline,
-                            path: decodePolyline(r.polyline)
+                            path: decodePolyline(r.polyline),
+                            hidden: false
                         }
                     })
                 }
             )).then(routes => {
                 // @ts-ignore
+                console.log(routes)
                 setBookedRoutes(routes)
             })
         })
@@ -121,26 +133,33 @@ const App = () => {
 
     const onSearch = () => {
         searchRoutes({
-            start: createLatLng(startLatLng),
-            destination: createLatLng(destinationLatLng)
+            start: createLocation(startLatLng),
+            destination: createLocation(destinationLatLng)
         }).then(result => {
             console.log(result)
             setRouteResult(result)
+            // TODO do this via ids
+            setBookedRoutes(old => old.map(route => {
+                route.hidden = route.polyline === result.oldPolyline
+                return route
+            }))
         })
     }
 
     const onSubmit = () => {
-
+        // NOP
     }
 
     const createDisplayValues = (): DisplayValues => {
+        let canEco = routeResult?.mergeID && routeResult?.mergeID !== "---"
+
         return {
             distanceStandard: routeResult?.standardMeta?.distance,
             timeStandard: routeResult?.standardMeta?.time,
             co2Standard: routeResult?.standardMeta?.CO2,
-            distanceEco: routeResult?.mergedMeta?.distance,
-            timeEco: routeResult?.mergedMeta?.time,
-            co2Eco: routeResult?.mergedMeta?.CO2,
+            distanceEco: canEco ? routeResult?.mergedMeta?.distance : undefined,
+            timeEco: canEco ? routeResult?.mergedMeta?.time : undefined,
+            co2Eco: canEco ? routeResult?.mergedMeta?.CO2 : undefined,
         }
     }
 
@@ -156,7 +175,6 @@ const App = () => {
         }).join('')
     }
 
-
     return (
         <Grid container direction="column" style={{padding: "40px"}}>
             <Grid item>
@@ -170,8 +188,7 @@ const App = () => {
                             {vehicles.map(v => <Marker key={v.vehicleID}
                                                        position={createLatLng(v.lat, v.lng)}
                                                        icon="taxi.png"/>)}
-                            {bookedRoutes.map(r => <Polyline strokeColor={r.color} path={r.path}/>)}
-                            {bookedRoutes.map(r => <Marker position={r.path[r.path.length - 1]}/>)}
+                            {bookedRoutes.filter(r => !r.hidden).map(r => <SavedRouteRender route={r}/>)}
 
                             {latLngToMarker(startLatLng, "A")}
                             {latLngToMarker(destinationLatLng, "B")}

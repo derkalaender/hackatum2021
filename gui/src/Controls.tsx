@@ -88,11 +88,11 @@ const Controls: React.FC<ControlsProps> = ({
                                focused={selectedTextField === TextFieldId.DESTINATION}/>
                 </Grid>
                 <Grid item>
-                    <Button onClick={onSearch} disabled={searchEnabled === false}> Search</Button>
+                    <Button onClick={onSearch} disabled={searchEnabled === false} variant="contained"> Search</Button>
                 </Grid>
-                <Grid item>
-                    <Button onClick={onSubmit} disabled={submitEnabled === false}>Submit</Button>
-                </Grid>
+                {/*<Grid item>*/}
+                {/*    <Button onClick={onSubmit} disabled={submitEnabled === false}>Submit</Button>*/}
+                {/*</Grid>*/}
 
                 <Grid item>
                     <Chip label={"Distance normal: " + displayDistance(displayValues?.distanceStandard)}/>
