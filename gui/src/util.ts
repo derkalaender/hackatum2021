@@ -8,3 +8,8 @@ export function createLatLng(latOrString: number | string, lng?: number): google
         return new google.maps.LatLng(latOrString, lng)
     }
 }
+
+// random number between min and max (inclusive)
+export const randomIntFromInterval = (min: number, max: number): number => {
+    return Math.floor(Math.random() * (max - min + 1) + min)
+}
