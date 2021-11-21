@@ -1,5 +1,3 @@
-import LatLng = google.maps.LatLng;
-
 export interface Vehicle {
     charge: number,
     lat: number,
@@ -8,9 +6,7 @@ export interface Vehicle {
     vehicleID: string
 }
 
-export enum VehicleStatus {
-    FREE, BOOKED
-}
+export type VehicleStatus = "FREE" | "BOOKED"
 
 export interface Booking {
     destinationLat: number,
@@ -22,17 +18,20 @@ export interface Booking {
     status: BookingStatus
 }
 
-export enum BookingStatus {
-    CREATED, STARTED, COMPLETED, VEHICLE_ASSIGNED
+export type BookingStatus = "CREATED" | "STARTED"| "COMPLETED" | "VEHICLE_ASSIGNED"
+
+export interface Location {
+    lat: number
+    lng: number
 }
 
 export interface Query {
-    start: LatLng
-    destination: LatLng
+    start: Location
+    destination: Location
 }
 
 export interface RouteGeometry {
-    path: LatLng[]
+    path: Location[]
     polyline: string
 }
 

@@ -7,7 +7,7 @@ import {getBookings, getDirections, getVehicles, searchRoutes} from "./api";
 import Polyline from "./map/Polyline";
 import Marker from "./map/Marker";
 import Map from "./map/Map";
-import {createLatLng, randomIntFromInterval} from "./util";
+import {createLatLng, createLocation, randomIntFromInterval} from "./util";
 
 const render = (status: Status) => {
     switch (status) {
@@ -64,13 +64,13 @@ const App = () => {
     useEffect(() => {
         if (vehicles.length === 0) return
         getBookings().then(bookings => {
-            Promise.all(bookings.map(b => {
+            Promise.all(bookings.filter(b => b.status === "VEHICLE_ASSIGNED").map(b => {
                     // TODO handle vehicle not exists
                     let v = vehicles.find(v => v.vehicleID === b.vehicleID)!
 
                     return getDirections({
-                        start: createLatLng(v.lat, v.lng),
-                        destination: createLatLng(b.destinationLat, b.destinationLng),
+                        start: createLocation(v.lat, v.lng),
+                        destination: createLocation(b.destinationLat, b.destinationLng),
                     }).then<SavedRoute>(r => {
                         return {
                             color: createRandomColor(),
@@ -121,10 +121,9 @@ const App = () => {
 
     const onSearch = () => {
         searchRoutes({
-            start: createLatLng(startLatLng),
-            destination: createLatLng(destinationLatLng)
+            start: createLocation(startLatLng),
+            destination: createLocation(destinationLatLng)
         }).then(result => {
-            console.log(result)
             setRouteResult(result)
         })
     }
