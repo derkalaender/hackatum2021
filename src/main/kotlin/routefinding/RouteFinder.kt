@@ -92,7 +92,7 @@ object RouteFinder {
         )!! //TODO error
 
         val closestCar =
-            closeCars.mapIndexed { index, it -> Pair(freeCarMatrix.rows.first().elements[index].distance.value, it) }
+            closeCars.mapIndexed { index, it -> Pair(freeCarMatrix.rows.first().elements[index].duration.value, it) }
                 .minByOrNull { it.first }
         val directionSrcToDst = closestCar?.let {
             GoogleAPI.getDirections(
@@ -106,56 +106,63 @@ object RouteFinder {
 
         val bookings = SixtAPI.getBookings()
         //TODO check error
-        val shortestPickupDirection = bookings.map { booking ->
-            val firstDestMatrix = GoogleAPI.getMatrix(
-                origins = listOf(Pair(booking.pickupLat.toString(), booking.pickupLng.toString())),
-                destinations = listOf(
-                    Pair(booking.destinationLat.toString(), booking.destinationLng.toString()),
-                    Pair(srcLat.toString(), srcLng.toString()),
-                )
-            )!!
-            val distBookingDst = firstDestMatrix.rows.first().elements[0].distance.value
-            val distNewSrc = firstDestMatrix.rows.first().elements[1].distance.value
+        val shortestPickupDirection = bookings.mapNotNull { booking ->
+            val vID = booking.vehicleID
+            val vehicle = vID?.let { SixtAPI.getVehicle(it) }
 
-            val points = mutableListOf<Location>()
-            points.add(Location(booking.pickupLat, booking.pickupLng))
-            if(distBookingDst < distNewSrc) points.add(Location(booking.destinationLat, booking.destinationLng))
-            else points.add(Location(srcLat, srcLng))
-
-            if(points.last() == Location(booking.destinationLat, booking.destinationLng)) {
-                points.add(Location(srcLat, srcLng))
-                points.add(Location(dstLat, dstLng))
-            } else { //picked up
-                val secondDestMatrix = GoogleAPI.getMatrix(
-                    origins = listOf(points.last().let { Pair(it.lat.toString(), it.lng.toString()) }) ,
+            if(vehicle != null) {
+                val firstDestMatrix = GoogleAPI.getMatrix(
+                    origins = listOf(Pair(vehicle.lat.toString(), vehicle.lng.toString())),
                     destinations = listOf(
                         Pair(booking.destinationLat.toString(), booking.destinationLng.toString()),
-                        Pair(dstLat.toString(), dstLng.toString()),
+                        Pair(srcLat.toString(), srcLng.toString()),
                     )
                 )!!
+                val distBookingDst = firstDestMatrix.rows.first().elements[0].distance.value
+                val distNewSrc = firstDestMatrix.rows.first().elements[1].distance.value
 
-                val distBookingDst2 = secondDestMatrix.rows.first().elements[0].distance.value
-                val distNewDst = secondDestMatrix.rows.first().elements[1].distance.value
+                val points = mutableListOf<Location>()
+                points.add(Location(vehicle.lat, vehicle.lng))
+                if(distBookingDst < distNewSrc) points.add(Location(booking.destinationLat, booking.destinationLng))
+                else points.add(Location(srcLat, srcLng))
 
-                if(distBookingDst2 < distNewDst) {
-                    points.add(Location(booking.destinationLat, booking.destinationLng))
+                if(points.last() == Location(booking.destinationLat, booking.destinationLng)) {
+                    points.add(Location(srcLat, srcLng))
                     points.add(Location(dstLat, dstLng))
-                } else {
-                    points.add(Location(dstLat, dstLng))
-                    points.add(Location(booking.destinationLat, booking.destinationLng))
+                } else { //picked up
+                    val secondDestMatrix = GoogleAPI.getMatrix(
+                        origins = listOf(points.last().let { Pair(it.lat.toString(), it.lng.toString()) }) ,
+                        destinations = listOf(
+                            Pair(booking.destinationLat.toString(), booking.destinationLng.toString()),
+                            Pair(dstLat.toString(), dstLng.toString()),
+                        )
+                    )!!
+
+                    val distBookingDst2 = secondDestMatrix.rows.first().elements[0].distance.value
+                    val distNewDst = secondDestMatrix.rows.first().elements[1].distance.value
+
+                    if(distBookingDst2 < distNewDst) {
+                        points.add(Location(booking.destinationLat, booking.destinationLng))
+                        points.add(Location(dstLat, dstLng))
+                    } else {
+                        points.add(Location(dstLat, dstLng))
+                        points.add(Location(booking.destinationLat, booking.destinationLng))
+                    }
                 }
-            }
 
-            val direction = GoogleAPI.getDirections(
-                startLat = points[0].lat,
-                startLng = points[0].lng,
-                dstLat = points[3].lat,
-                dstLng = points[3].lng,
-                waypoints = points.subList(1, 3).map { Pair(it.lat, it.lng) }
-            )!!
-            //TODO check error
-            Pair(direction, booking)
+                val direction = GoogleAPI.getDirections(
+                    startLat = points[0].lat,
+                    startLng = points[0].lng,
+                    dstLat = points[3].lat,
+                    dstLng = points[3].lng,
+                    waypoints = points.subList(1, 3).map { Pair(it.lat, it.lng) }
+                )!!
+                //TODO check error
+                Pair(direction, booking)
+            } else null
         }
+
+
         val shortestDirection = kotlin.runCatching {
             shortestPickupDirection
                 .filter { (newDirections, booking) ->
