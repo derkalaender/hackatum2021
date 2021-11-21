@@ -3,6 +3,7 @@ package routefinding
 import data.Location
 import googleapi.GoogleAPI
 import googleapi.json.Directions
+import googleapi.json.DirectionsLeg
 import googleapi.json.DirectionsRoute
 import googleapi.json.DirectionsStep
 import kotlinx.serialization.Serializable
@@ -20,6 +21,7 @@ data class RouteResult(
     val standardMeta: RouteMeta,
     val mergedGeometry: RouteGeometry,
     val mergedMeta: RouteMeta,
+    val oldPolyline : String,
 )
 
 @Serializable
@@ -39,7 +41,8 @@ data class RouteMeta(
 class RouteSearchResult(
     val standardDirection: Directions?,
     val mergedDirection: Directions?,
-    val booking: Booking?
+    val booking: Booking?,
+    val oldDirection: Directions?
 ) {
     companion object {
         fun calcCO2(kwH: Double): Double {
@@ -55,7 +58,7 @@ class RouteSearchResult(
     val mergedDistance: Int = mergedDirection?.let {
         if(standardDirection != null) {
             val shortest = RouteFinder.getShortestRoute(standardDirection)
-            RouteFinder.getDistanceIn(shortest.legs.first().start_location, shortest.legs.last().end_location, it)
+            RouteFinder.getDistanceIn(shortest.legs.first().end_location, shortest.legs.last().end_location, it)
         } else null
     } ?: -1
     val standardCO2 = calcCO2(calcKWH(standardDistance))
@@ -64,7 +67,7 @@ class RouteSearchResult(
     val mergedTime = mergedDirection?.let {
         if (standardDirection != null){
             val shortest = RouteFinder.getShortestRoute(standardDirection)
-            RouteFinder.getTimeIn(shortest.legs.first().start_location, shortest.legs.last().end_location, it)
+            RouteFinder.getTimeIn(shortest.legs.first().end_location, shortest.legs.last().end_location, it)
         } else null
     } ?: -1
     val standardRoute: DirectionsRoute? = standardDirection?.let { RouteFinder.getShortestRoute(it) }
@@ -109,7 +112,6 @@ object RouteFinder {
         val shortestPickupDirection = bookings.mapNotNull { booking ->
             val vID = booking.vehicleID
             val vehicle = vID?.let { SixtAPI.getVehicle(it) }
-
             if(vehicle != null) {
                 val firstDestMatrix = GoogleAPI.getMatrix(
                     origins = listOf(Pair(vehicle.lat.toString(), vehicle.lng.toString())),
@@ -158,10 +160,16 @@ object RouteFinder {
                     waypoints = points.subList(1, 3).map { Pair(it.lat, it.lng) }
                 )!!
                 //TODO check error
-                Pair(direction, booking)
+
+                val oldDirections = GoogleAPI.getDirections(
+                    startLat = vehicle.lat,
+                    startLng = vehicle.lng,
+                    dstLat = booking.destinationLat,
+                    dstLng = booking.destinationLng
+                )
+                Triple(direction, booking, oldDirections)
             } else null
         }
-
 
         val shortestDirection = kotlin.runCatching {
             shortestPickupDirection
@@ -183,7 +191,8 @@ object RouteFinder {
                 }
         }.getOrNull()
 
-        return RouteSearchResult(directionSrcToDst, shortestDirection?.first, shortestDirection?.second)
+        return RouteSearchResult(directionSrcToDst, shortestDirection?.first, shortestDirection?.second,
+            shortestDirection?.third)
     }
 
     fun calculateDistance(directions: Directions): Int {
@@ -195,27 +204,22 @@ object RouteFinder {
     }
 
     fun getShortestRoute(directions: Directions): DirectionsRoute {
-        return directions.routes.minByOrNull { route -> route.legs.sumOf { it.distance.value } }!!
+        return directions.routes.minByOrNull { route -> route.legs.sumOf { it.duration.value } }!!
     }
 
-    private fun subStepsIn(start: Location, dest: Location, directions: Directions): List<DirectionsStep> {
-        return directions.routes.minByOrNull { route -> route.legs.sumOf { it.distance.value } }!!
-            .legs.flatMap { it.steps }
-            .dropWhile {
-                abs(it.start_location.lat - start.lat) > 0.002 && abs(it.start_location.lng - start.lng) > 0.002
-            }
-            .dropLastWhile {
-                abs(it.end_location.lat - dest.lat) > 0.002 && abs(it.end_location.lng - dest.lng) > 0.002
-            }
+    private fun subLegsIn(start: Location, dest: Location, directions: Directions): List<DirectionsLeg> {
+        return directions.routes.minByOrNull { route -> route.legs.sumOf { it.duration.value } }!!
+            .legs.dropWhile { it.start_location != start }.dropLastWhile { it.end_location != dest }
+
     }
 
     fun getDistanceIn(start: Location, dest: Location, directions: Directions): Int {
-        return subStepsIn(start, dest, directions)
+        return subLegsIn(start, dest, directions)
             .sumOf { it.distance.value }
     }
 
     fun getTimeIn(start: Location, dest: Location, directions: Directions): Int {
-        return subStepsIn(start, dest, directions)
+        return subLegsIn(start, dest, directions)
             .sumOf { it.duration.value }
     }
 }
