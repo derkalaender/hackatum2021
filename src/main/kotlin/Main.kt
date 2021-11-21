@@ -10,11 +10,10 @@ import util.Json
 import kotlin.math.sqrt
 
 suspend fun main () {
-    //RobotaxiGui.start()
+    RobotaxiGui.start()
 
     //val test = RouteFinder.findRoutes(48.072023, 11.522836, 48.068866, 11.523638)
     //println(test)
-    test()
 }
 
 suspend fun test() {

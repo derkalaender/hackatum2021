@@ -4,8 +4,12 @@ export interface Vehicle {
     charge: number,
     lat: number,
     lng: number,
-    status: string,
+    status: VehicleStatus,
     vehicleID: string
+}
+
+export enum VehicleStatus {
+    FREE, BOOKED
 }
 
 export interface Booking {
