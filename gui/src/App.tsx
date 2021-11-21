@@ -151,13 +151,15 @@ const App = () => {
     }
 
     const createDisplayValues = (): DisplayValues => {
+        let canEco = routeResult?.mergeID && routeResult?.mergeID !== "---"
+
         return {
             distanceStandard: routeResult?.standardMeta?.distance,
             timeStandard: routeResult?.standardMeta?.time,
             co2Standard: routeResult?.standardMeta?.CO2,
-            distanceEco: routeResult?.mergedMeta?.distance,
-            timeEco: routeResult?.mergedMeta?.time,
-            co2Eco: routeResult?.mergedMeta?.CO2,
+            distanceEco: canEco ? routeResult?.mergedMeta?.distance : undefined,
+            timeEco: canEco ? routeResult?.mergedMeta?.time : undefined,
+            co2Eco: canEco ? routeResult?.mergedMeta?.CO2 : undefined,
         }
     }
 
