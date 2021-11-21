@@ -90,8 +90,12 @@ object SixtAPI {
     }
 
     suspend fun getVehicle(id: String): Vehicle? {
-        val string = get("/vehicle/$id")
-        return runCatching<Vehicle> { Json.jsonTranscoder.decodeFromString(string) }.getOrNull()
+        val string = get("/vehicles/$id")
+        return runCatching<Vehicle> { Json.jsonTranscoder.decodeFromString(string) }.onFailure {
+            println(it)
+            println(string)
+        }
+            .getOrNull()
     }
 
     suspend fun getBookings(): List<Booking> {
