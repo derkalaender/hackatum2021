@@ -3,6 +3,9 @@ import googleapi.json.Geocode
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import routefinding.RouteFinder
+import routefinding.RouteGeometry
+import routefinding.RouteMeta
+import routefinding.RouteResult
 import sixtapi.SixtAPI
 import server.RobotaxiGui
 import sixtapi.json.VehicleStatus
@@ -12,10 +15,34 @@ import kotlin.math.sqrt
 suspend fun main () {
     RobotaxiGui.start()
 
-   // val test = RouteFinder.findRoutes(48.196188, 11.578347, 48.068866, 11.523638)
-    //test.standardRoute?.legs?.forEach { println(it.start_location) }
-    //test.mergedRoute?.legs?.forEach { println(it.start_location) }
-    //println(test)
+//    val routes = RouteFinder.findRoutes(48.196188, 11.578347, 48.068866, 11.523638)
+//
+//    val routeResult = RouteResult(
+//        id = "",
+//        mergedID = routes.booking?.bookingID ?: "---",
+//        standardGeometry = RouteGeometry(
+//            path = routes.standardRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten() ?: listOf(),
+//            polyline = routes.standardRoute?.overview_polyline?.points ?: ""
+//        ),
+//        standardMeta = RouteMeta(
+//            CO2 = routes.standardCO2,
+//            time = routes.standardTime,
+//            distance = routes.standardDistance
+//        ),
+//        mergedGeometry = RouteGeometry(
+//            path = routes.mergedRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten() ?: listOf(),
+//            polyline = routes.mergedDirection?.let { RouteFinder.getShortestRoute(it).overview_polyline.points
+//            } ?: ""
+//        ),
+//        mergedMeta = RouteMeta(
+//            CO2 = routes.mergedCO2,
+//            time = routes.mergedTime,
+//            distance = routes.mergedDistance
+//        ),
+//        oldPolyline = routes.oldDirection?.let { RouteFinder.getShortestRoute(it) }?.overview_polyline?.points ?: ""
+//    )
+
+    //println(routeResult)
     //test()
 }
 

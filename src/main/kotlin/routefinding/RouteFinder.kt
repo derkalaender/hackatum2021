@@ -173,7 +173,7 @@ object RouteFinder {
 
         val shortestDirection = kotlin.runCatching {
             shortestPickupDirection
-                .filter { (newDirections, booking) ->
+                .filter { (newDirections, booking,_) ->
                     val person = SixtAPI.getPersonOfBooking(booking.bookingID) ?: return@filter false
                     val oldDirections = GoogleAPI.getDirections(
                         booking.pickupLat,
@@ -188,8 +188,7 @@ object RouteFinder {
                 }
         }.getOrNull()
 
-        return RouteSearchResult(directionSrcToDst, shortestDirection?.third, shortestDirection?.second,
-            shortestDirection?.first)
+        return RouteSearchResult(directionSrcToDst, shortestDirection?.first, shortestDirection?.second, shortestDirection?.third)
     }
 
     fun calculateDistance(directions: Directions): Int {

@@ -105,7 +105,7 @@ private fun Application.module() {
                     id = uuid,
                     mergedID = routes.booking?.bookingID ?: "---",
                     standardGeometry = RouteGeometry(
-                        path = routes.standardRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
+                        path = routes.standardRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten() ?: listOf(),
                         polyline = routes.standardRoute?.overview_polyline?.points ?: ""
                     ),
                     standardMeta = RouteMeta(
@@ -114,8 +114,9 @@ private fun Application.module() {
                         distance = routes.standardDistance
                     ),
                     mergedGeometry = RouteGeometry(
-                        path = routes.mergedRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten()?.distinct() ?: listOf(),
-                        polyline = routes.mergedRoute?.overview_polyline?.points ?: ""
+                        path = routes.mergedRoute?.legs?.map { listOf(it.start_location, it.end_location) }?.flatten() ?: listOf(),
+                        polyline = routes.mergedDirection?.let { RouteFinder.getShortestRoute(it).overview_polyline.points
+                        } ?: ""
                     ),
                     mergedMeta = RouteMeta(
                         CO2 = routes.mergedCO2,
